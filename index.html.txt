@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pregunta importante 💘</title>
+<style>
+body{
+  font-family: Arial;
+  text-align:center;
+  margin-top:100px;
+  background:#ffe6f0;
+}
+
+h1{
+  font-size:30px;
+}
+
+button{
+  font-size:22px;
+  padding:12px 25px;
+  margin:15px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+#si{
+  background:#ff4d6d;
+  color:white;
+}
+
+#no{
+  background:#777;
+  color:white;
+  position:absolute;
+}
+</style>
+</head>
+
+<body>
+
+<h1>¿Quieres salir conmigo en San Valentín? 💝</h1>
+
+<button id="si" onclick="ok()">Sí 💖</button>
+<button id="no" onmouseover="huir()">No 😢</button>
+
+<script>
+let size = 1;
+
+function huir(){
+  const b = document.getElementById("no");
+  b.style.left = Math.random()*window.innerWidth + "px";
+  b.style.top = Math.random()*window.innerHeight + "px";
+
+  size -= 0.1;
+  if(size > 0.15){
+    b.style.transform = "scale("+size+")";
+  }
+}
+
+function ok(){
+  document.body.innerHTML =
+    "<h1>😍 Sabía que dirías que sí 💘</h1><p>Prepárate para la cita</p>";
+}
+</script>
+
+</body>
+</html>
