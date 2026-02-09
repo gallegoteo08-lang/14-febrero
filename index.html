@@ -26,6 +26,7 @@ body{
   box-shadow:0 15px 40px rgba(0,0,0,.15);
   text-align:center;
   animation:pop .8s ease;
+  z-index:2;
 }
 
 @keyframes pop{
@@ -43,11 +44,13 @@ button{
   border-radius:14px;
   margin:8px;
   cursor:pointer;
-  transition:.2s;
 }
 
-#si{background:#ff2e63;color:white;}
-#si:active{transform:scale(.95);}
+#si{
+  background:#ff2e63;
+  color:white;
+  opacity:.5;
+}
 
 #no{
   background:#666;
@@ -61,9 +64,23 @@ button{
   right:10px;
   font-size:14px;
   padding:8px 12px;
+  z-index:3;
 }
 
-.heart{
+.floatHeart{
+  position:fixed;
+  font-size:28px;
+  cursor:pointer;
+  animation:float 6s linear forwards;
+  z-index:1;
+}
+
+@keyframes float{
+  from{transform:translateY(100vh);}
+  to{transform:translateY(-120px);}
+}
+
+.heartRain{
   position:fixed;
   top:-10px;
   font-size:20px;
@@ -90,10 +107,10 @@ button{
 
 <div class="card">
   <h1>Valeria 💖</h1>
-  <p>¿Quieres salir conmigo este 14 de febrero?</p>
-  <p id="count"></p>
+  <p>Atrapa 3 corazones para desbloquear el SÍ 😏</p>
+  <p id="score">0 / 3</p>
 
-  <button id="si">SÍ 😍</button>
+  <button id="si" disabled>SÍ 😍</button>
   <button id="no">No 😢</button>
 </div>
 
@@ -106,11 +123,9 @@ const musica = document.getElementById("musica");
 const muteBtn = document.getElementById("mute");
 const btnNo = document.getElementById("no");
 const btnSi = document.getElementById("si");
+const scoreTxt = document.getElementById("score");
 
 let muted=false;
-let intentos=0;
-
-// reproducir música tras primer toque (iPhone)
 document.body.addEventListener("click",()=>musica.play().catch(()=>{}),{once:true});
 
 muteBtn.onclick=()=>{
@@ -119,52 +134,66 @@ muteBtn.onclick=()=>{
   muteBtn.innerText= muted ? "🔇":"🔊";
 };
 
-// contador
-const target = new Date("Feb 14, 2026 00:00:00").getTime();
-setInterval(()=>{
-  const d = target - Date.now();
-  if(d<=0) return;
-  const dias = Math.floor(d/86400000);
-  document.getElementById("count").innerText =
-    "Faltan "+dias+" días para nuestra cita 💘";
-},1000);
+// -------- MINI JUEGO --------
+
+let puntos = 0;
+
+function spawnHeart(){
+  const h=document.createElement("div");
+  h.className="floatHeart";
+  h.innerText="💖";
+  h.style.left=Math.random()*90+"vw";
+
+  h.onclick=()=>{
+    puntos++;
+    if(navigator.vibrate) navigator.vibrate(40);
+    h.remove();
+    scoreTxt.innerText = puntos+" / 3";
+
+    if(puntos>=3){
+      btnSi.disabled=false;
+      btnSi.style.opacity=1;
+      scoreTxt.innerText="Desbloqueado 😍";
+    }
+  };
+
+  document.body.appendChild(h);
+  setTimeout(()=>h.remove(),6000);
+}
+
+setInterval(spawnHeart,1200);
 
 // -------- BOTÓN NO ANTI DEDO --------
 
+let intentos=0;
 const frases=[
   "¿segura? 😳",
   "piénsalo 🙃",
   "casi 😏",
-  "nop nop 😆",
+  "nop 😆",
   "error ❌",
   "bloqueado 🔒",
   "último aviso ⚠️"
 ];
 
-document.addEventListener("pointermove", detectarCercania);
+document.addEventListener("pointermove", detectar);
 btnNo.addEventListener("touchstart", mover);
 btnNo.addEventListener("mouseenter", mover);
 
-function detectarCercania(e){
-  const rect = btnNo.getBoundingClientRect();
-  const dx = Math.abs(e.clientX - (rect.left + rect.width/2));
-  const dy = Math.abs(e.clientY - (rect.top + rect.height/2));
-
-  if(dx < 120 && dy < 120){
-    mover();
-  }
+function detectar(e){
+  const r=btnNo.getBoundingClientRect();
+  const dx=Math.abs(e.clientX-(r.left+r.width/2));
+  const dy=Math.abs(e.clientY-(r.top+r.height/2));
+  if(dx<120 && dy<120) mover();
 }
 
 function mover(){
   intentos++;
+  if(navigator.vibrate) navigator.vibrate(30);
 
-  if(navigator.vibrate) navigator.vibrate(35);
+  if(intentos<=frases.length) btnNo.innerText=frases[intentos-1];
 
-  if(intentos <= frases.length){
-    btnNo.innerText = frases[intentos-1];
-  }
-
-  if(intentos >= 9){
+  if(intentos>=9){
     btnNo.innerHTML="🚀";
     btnNo.style.transition="1s";
     btnNo.style.transform="translateY(-900px) rotate(720deg)";
@@ -172,41 +201,37 @@ function mover(){
     return;
   }
 
-  const maxX = window.innerWidth - 130;
-  const maxY = window.innerHeight - 90;
-
-  btnNo.style.left = Math.random()*maxX + "px";
-  btnNo.style.top  = Math.random()*maxY + "px";
+  btnNo.style.left=Math.random()*(window.innerWidth-130)+"px";
+  btnNo.style.top=Math.random()*(window.innerHeight-90)+"px";
 }
 
-// -------- BOTÓN SI FINAL --------
+// -------- BOTÓN SI --------
 
 btnSi.onclick=()=>{
-  if(navigator.vibrate) navigator.vibrate([120,60,120]);
+  if(btnSi.disabled) return;
 
   document.body.innerHTML=`
   <div class="card">
-    <h1>😍 Sabía que dirías que sí 💘</h1>
-    <p>Prepárate para disfrutar ✨</p>
+    <h1>😍 Sabía que dirías que sí Valeria 💘</h1>
+    <p>Prepárate para la cita más linda ✨</p>
   </div>`;
 
-  lluviaConfeti();
+  confeti();
   fuegos();
 };
 
-// corazones constantes
+// lluvia corazones fondo
 setInterval(()=>{
   const h=document.createElement("div");
-  h.className="heart";
+  h.className="heartRain";
   h.innerText="💖";
   h.style.left=Math.random()*100+"vw";
   h.style.animationDuration=(2+Math.random()*3)+"s";
   document.body.appendChild(h);
   setTimeout(()=>h.remove(),5000);
-},400);
+},500);
 
-// confeti
-function lluviaConfeti(){
+function confeti(){
   for(let i=0;i<140;i++){
     const c=document.createElement("div");
     c.className="confetti";
@@ -218,11 +243,10 @@ function lluviaConfeti(){
   }
 }
 
-// fuegos
 function fuegos(){
   setInterval(()=>{
     const f=document.createElement("div");
-    f.className="heart";
+    f.className="heartRain";
     f.innerText="🎆";
     f.style.left=Math.random()*100+"vw";
     f.style.fontSize="26px";
