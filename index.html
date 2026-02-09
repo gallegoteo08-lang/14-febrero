@@ -2,33 +2,58 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Para Valeria 💘</title>
 
 <style>
 body{
-  font-family: Arial;
+  font-family: Arial, Helvetica, sans-serif;
   text-align:center;
-  margin-top:80px;
-  background:#ffe6f0;
+  margin:0;
+  background: linear-gradient(135deg,#ffb6d9,#ffe6f2);
   overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.card{
+  background:white;
+  padding:25px;
+  border-radius:20px;
+  width:90%;
+  max-width:420px;
+  box-shadow:0 15px 40px rgba(0,0,0,0.15);
+  animation:pop .8s ease;
+}
+
+@keyframes pop{
+  from{transform:scale(.7); opacity:0;}
+  to{transform:scale(1); opacity:1;}
 }
 
 h1{
-  font-size:30px;
+  font-size:24px;
 }
 
 button{
-  font-size:22px;
-  padding:14px 26px;
-  margin:15px;
+  font-size:20px;
+  padding:14px 22px;
+  margin:12px;
   border:none;
   border-radius:14px;
   cursor:pointer;
+  transition:.2s;
 }
 
 #si{
   background:#ff2e63;
   color:white;
+}
+
+#si:hover{
+  transform:scale(1.1);
 }
 
 #no{
@@ -45,41 +70,69 @@ button{
 }
 
 @keyframes fall{
-  to{
-    transform:translateY(110vh);
-  }
+  to{ transform:translateY(110vh); }
 }
 </style>
 </head>
 
 <body>
 
-<h1>Valeria 💖<br>¿Quieres salir conmigo este 14 de febrero?</h1>
+<div class="card">
+  <h1>Valeria 💖<br>¿Quieres salir conmigo este 14 de febrero?</h1>
 
-<button id="si" onclick="acepto()">Sí obvio 😍</button>
-<button id="no" onmouseover="escapa()">No 😢</button>
+  <button id="si" onclick="acepto()">Sí obvio 😍</button>
+  <button id="no">No 😢</button>
+</div>
+
+<audio id="musica" loop>
+  <source src="musica.mp3" type="audio/mpeg">
+</audio>
 
 <script>
 let scale = 1;
+let intentos = 0;
+const btnNo = document.getElementById("no");
+const musica = document.getElementById("musica");
+
+// iPhone necesita interacción para reproducir audio
+document.body.addEventListener("click",()=>{
+  musica.play().catch(()=>{});
+},{once:true});
+
+btnNo.onmouseover = escapa;
+btnNo.onclick = escapa;
 
 function escapa(){
-  const b = document.getElementById("no");
-  b.style.left = Math.random()*window.innerWidth + "px";
-  b.style.top = Math.random()*window.innerHeight + "px";
+  intentos++;
+
+  if(intentos >= 7){
+    btnNo.innerHTML = "🚀";
+    btnNo.style.transition="1s";
+    btnNo.style.transform="translateY(-900px) rotate(720deg)";
+    setTimeout(()=>btnNo.style.display="none",900);
+    return;
+  }
+
+  const x = Math.random()*(window.innerWidth-100);
+  const y = Math.random()*(window.innerHeight-100);
+  btnNo.style.left = x+"px";
+  btnNo.style.top = y+"px";
 
   scale -= 0.12;
-  if(scale > 0.15){
-    b.style.transform = "scale("+scale+")";
+  if(scale>0.2){
+    btnNo.style.transform="scale("+scale+")";
   }
 }
 
 function acepto(){
   document.body.innerHTML = `
+  <div class="card">
     <h1>😍 Sabía que dirías que sí Valeria 💘</h1>
-    <h2>Prepárate porque te debo una cita hermosa ✨</h2>
-  `;
+    <h2>Tenga lista esa pinta ✨</h2>
+  </div>`;
 }
 
+// corazones cayendo
 function corazones(){
   const h = document.createElement("div");
   h.className="heart";
