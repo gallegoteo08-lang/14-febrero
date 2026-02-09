@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Para Valeria 💘</title>
+<title>Valeria 💘</title>
 
 <style>
 body{
-  font-family: Arial, Helvetica, sans-serif;
-  text-align:center;
   margin:0;
-  background: linear-gradient(135deg,#ffb6d9,#ffe6f2);
+  font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(135deg,#ffb6d9,#ffe6f2);
   overflow:hidden;
   display:flex;
   justify-content:center;
@@ -20,46 +19,48 @@ body{
 
 .card{
   background:white;
-  padding:25px;
+  padding:24px;
   border-radius:20px;
-  width:90%;
+  width:92%;
   max-width:420px;
-  box-shadow:0 15px 40px rgba(0,0,0,0.15);
+  box-shadow:0 15px 40px rgba(0,0,0,.15);
+  text-align:center;
   animation:pop .8s ease;
 }
 
 @keyframes pop{
-  from{transform:scale(.7); opacity:0;}
-  to{transform:scale(1); opacity:1;}
+  from{transform:scale(.7);opacity:0;}
+  to{transform:scale(1);opacity:1;}
 }
 
-h1{
-  font-size:24px;
-}
+h1{font-size:24px;margin:0 0 10px;}
+p{margin:6px 0 12px;}
 
 button{
-  font-size:20px;
-  padding:14px 22px;
-  margin:12px;
+  font-size:18px;
+  padding:14px 20px;
   border:none;
   border-radius:14px;
+  margin:8px;
   cursor:pointer;
   transition:.2s;
 }
 
-#si{
-  background:#ff2e63;
-  color:white;
-}
-
-#si:hover{
-  transform:scale(1.1);
-}
+#si{background:#ff2e63;color:white;}
+#si:active{transform:scale(.95);}
 
 #no{
   background:#666;
   color:white;
-  position:absolute;
+  position:fixed;
+}
+
+#mute{
+  position:fixed;
+  top:10px;
+  right:10px;
+  font-size:14px;
+  padding:8px 12px;
 }
 
 .heart{
@@ -70,17 +71,29 @@ button{
 }
 
 @keyframes fall{
-  to{ transform:translateY(110vh); }
+  to{transform:translateY(110vh);}
+}
+
+.confetti{
+  position:fixed;
+  width:8px;
+  height:14px;
+  top:-10px;
+  animation:fall linear forwards;
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h1>Valeria 💖<br>¿Quieres salir conmigo este 14 de febrero?</h1>
+<button id="mute">🔊</button>
 
-  <button id="si" onclick="acepto()">Sí obvio 😍</button>
+<div class="card">
+  <h1>Valeria 💖</h1>
+  <p>¿Quieres salir conmigo este 14 de febrero?</p>
+  <p id="count"></p>
+
+  <button id="si">SÍ 😍</button>
   <button id="no">No 😢</button>
 </div>
 
@@ -89,61 +102,135 @@ button{
 </audio>
 
 <script>
-let scale = 1;
-let intentos = 0;
-const btnNo = document.getElementById("no");
 const musica = document.getElementById("musica");
+const muteBtn = document.getElementById("mute");
+const btnNo = document.getElementById("no");
+const btnSi = document.getElementById("si");
 
-// iPhone necesita interacción para reproducir audio
-document.body.addEventListener("click",()=>{
-  musica.play().catch(()=>{});
-},{once:true});
+let muted=false;
+let intentos=0;
 
-btnNo.onmouseover = escapa;
-btnNo.onclick = escapa;
+// reproducir música tras primer toque (iPhone)
+document.body.addEventListener("click",()=>musica.play().catch(()=>{}),{once:true});
 
-function escapa(){
+muteBtn.onclick=()=>{
+  muted=!muted;
+  musica.muted=muted;
+  muteBtn.innerText= muted ? "🔇":"🔊";
+};
+
+// contador
+const target = new Date("Feb 14, 2026 00:00:00").getTime();
+setInterval(()=>{
+  const d = target - Date.now();
+  if(d<=0) return;
+  const dias = Math.floor(d/86400000);
+  document.getElementById("count").innerText =
+    "Faltan "+dias+" días para nuestra cita 💘";
+},1000);
+
+// -------- BOTÓN NO ANTI DEDO --------
+
+const frases=[
+  "¿segura? 😳",
+  "piénsalo 🙃",
+  "casi 😏",
+  "nop nop 😆",
+  "error ❌",
+  "bloqueado 🔒",
+  "último aviso ⚠️"
+];
+
+document.addEventListener("pointermove", detectarCercania);
+btnNo.addEventListener("touchstart", mover);
+btnNo.addEventListener("mouseenter", mover);
+
+function detectarCercania(e){
+  const rect = btnNo.getBoundingClientRect();
+  const dx = Math.abs(e.clientX - (rect.left + rect.width/2));
+  const dy = Math.abs(e.clientY - (rect.top + rect.height/2));
+
+  if(dx < 120 && dy < 120){
+    mover();
+  }
+}
+
+function mover(){
   intentos++;
 
-  if(intentos >= 7){
-    btnNo.innerHTML = "🚀";
+  if(navigator.vibrate) navigator.vibrate(35);
+
+  if(intentos <= frases.length){
+    btnNo.innerText = frases[intentos-1];
+  }
+
+  if(intentos >= 9){
+    btnNo.innerHTML="🚀";
     btnNo.style.transition="1s";
     btnNo.style.transform="translateY(-900px) rotate(720deg)";
-    setTimeout(()=>btnNo.style.display="none",900);
+    setTimeout(()=>btnNo.remove(),900);
     return;
   }
 
-  const x = Math.random()*(window.innerWidth-100);
-  const y = Math.random()*(window.innerHeight-100);
-  btnNo.style.left = x+"px";
-  btnNo.style.top = y+"px";
+  const maxX = window.innerWidth - 130;
+  const maxY = window.innerHeight - 90;
 
-  scale -= 0.12;
-  if(scale>0.2){
-    btnNo.style.transform="scale("+scale+")";
+  btnNo.style.left = Math.random()*maxX + "px";
+  btnNo.style.top  = Math.random()*maxY + "px";
+}
+
+// -------- BOTÓN SI FINAL --------
+
+btnSi.onclick=()=>{
+  if(navigator.vibrate) navigator.vibrate([120,60,120]);
+
+  document.body.innerHTML=`
+  <div class="card">
+    <h1>😍 Sabía que dirías que sí 💘</h1>
+    <p>Prepárate para disfrutar ✨</p>
+  </div>`;
+
+  lluviaConfeti();
+  fuegos();
+};
+
+// corazones constantes
+setInterval(()=>{
+  const h=document.createElement("div");
+  h.className="heart";
+  h.innerText="💖";
+  h.style.left=Math.random()*100+"vw";
+  h.style.animationDuration=(2+Math.random()*3)+"s";
+  document.body.appendChild(h);
+  setTimeout(()=>h.remove(),5000);
+},400);
+
+// confeti
+function lluviaConfeti(){
+  for(let i=0;i<140;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.background=`hsl(${Math.random()*360},90%,60%)`;
+    c.style.animationDuration=(2+Math.random()*3)+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),5000);
   }
 }
 
-function acepto(){
-  document.body.innerHTML = `
-  <div class="card">
-    <h1>😍 Sabía que dirías que sí Valeria 💘</h1>
-    <h2>Tenga lista esa pinta ✨</h2>
-  </div>`;
+// fuegos
+function fuegos(){
+  setInterval(()=>{
+    const f=document.createElement("div");
+    f.className="heart";
+    f.innerText="🎆";
+    f.style.left=Math.random()*100+"vw";
+    f.style.fontSize="26px";
+    f.style.animationDuration="2s";
+    document.body.appendChild(f);
+    setTimeout(()=>f.remove(),2000);
+  },300);
 }
-
-// corazones cayendo
-function corazones(){
-  const h = document.createElement("div");
-  h.className="heart";
-  h.innerHTML="💖";
-  h.style.left=Math.random()*100+"vw";
-  h.style.animationDuration=(Math.random()*3+2)+"s";
-  document.body.appendChild(h);
-  setTimeout(()=>h.remove(),5000);
-}
-
-setInterval(corazones,300);
 </script>
 
 </body>
