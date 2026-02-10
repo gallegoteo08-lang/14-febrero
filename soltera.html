@@ -2,20 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Modo Soltero Extremo 🎮</title>
+<title>Modo Soltero PRO 🎮</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 *{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  overflow:hidden;
+  font-family:Arial;
   color:white;
   text-align:center;
-  overflow:hidden;
   background:linear-gradient(270deg,#0f0c29,#302b63,#24243e);
   background-size:600% 600%;
-  animation:bgMove 12s ease infinite;
+  animation:bgMove 14s ease infinite;
 }
 
 @keyframes bgMove{
@@ -25,51 +26,46 @@ body{
 }
 
 h1{
-  margin-top:15px;
+  margin:12px 0 4px;
   animation:pulse 2s infinite;
 }
 
 @keyframes pulse{
-  0%{transform:scale(1)}
   50%{transform:scale(1.05)}
-  100%{transform:scale(1)}
 }
 
 #hud{
-  font-size:20px;
-  margin:8px;
+  font-size:18px;
+  margin-bottom:6px;
 }
 
 #combo{
-  font-size:22px;
+  height:26px;
+  font-size:20px;
   color:#ffd166;
-  height:28px;
-  transition:.2s;
 }
 
 button{
-  padding:16px 28px;
-  font-size:20px;
+  padding:14px 24px;
+  font-size:18px;
   border:none;
   border-radius:14px;
   background:#ff4d6d;
   color:white;
-  cursor:pointer;
   box-shadow:0 0 20px #ff4d6d;
   animation:glow 1.5s infinite alternate;
 }
 
 @keyframes glow{
-  from{box-shadow:0 0 10px #ff4d6d}
-  to{box-shadow:0 0 30px #ff4d6d}
+  from{box-shadow:0 0 8px #ff4d6d}
+  to{box-shadow:0 0 26px #ff4d6d}
 }
 
 .heart{
   position:absolute;
-  font-size:36px;
   cursor:pointer;
   user-select:none;
-  animation:fall linear forwards, spin 2s linear infinite;
+  animation:fall linear forwards, spin 3s linear infinite;
 }
 
 @keyframes fall{
@@ -77,33 +73,34 @@ button{
 }
 
 @keyframes spin{
-  from{rotate:0deg}
   to{rotate:360deg}
+}
+
+.gold{
+  filter:drop-shadow(0 0 10px gold);
 }
 
 .pop{
   position:absolute;
   font-size:22px;
-  animation:pop .5s forwards;
-  pointer-events:none;
+  animation:pop .6s forwards;
 }
 
 @keyframes pop{
+  to{transform:translateY(-50px) scale(1.6); opacity:0;}
+}
+
+.particle{
+  position:absolute;
+  font-size:18px;
+  animation:burst .7s forwards;
+}
+
+@keyframes burst{
   to{
-    transform:translateY(-40px) scale(1.6);
+    transform:translate(var(--dx), var(--dy));
     opacity:0;
   }
-}
-
-#result{
-  font-size:24px;
-  margin-top:15px;
-  animation:fadeIn .6s;
-}
-
-@keyframes fadeIn{
-  from{opacity:0; transform:scale(.8)}
-  to{opacity:1; transform:scale(1)}
 }
 
 .shake{
@@ -111,85 +108,146 @@ button{
 }
 
 @keyframes shake{
-  0%{transform:translateX(-6px)}
-  50%{transform:translateX(6px)}
-  100%{transform:translateX(0)}
+  25%{transform:translateX(-6px)}
+  75%{transform:translateX(6px)}
+}
+
+#result{
+  font-size:22px;
+  margin-top:8px;
+  animation:fade .5s;
+}
+
+@keyframes fade{
+  from{opacity:0; transform:scale(.8)}
+  to{opacity:1; transform:scale(1)}
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎮 Modo Soltero Extremo</h1>
-<div id="hud">Puntos: <span id="score">0</span> | Tiempo: <span id="time">30</span></div>
+<h1>🎮 Modo Soltero PRO</h1>
+<div id="hud">
+Puntos: <span id="score">0</span> |
+Tiempo: <span id="time">30</span> |
+Récord: <span id="best">0</span>
+</div>
+
 <div id="combo"></div>
 
-<button onclick="startGame()" id="startBtn">Empezar batalla 💥</button>
-
+<button id="startBtn" onclick="startGame()">Empezar 💥</button>
 <div id="result"></div>
 
 <script>
-let score=0;
-let time=30;
-let running=false;
-let combo=0;
-let spawnLoop;
-let timerLoop;
+let score=0,time=30,running=false,combo=0;
+let spawnRate=700;
+let spawnLoop,timerLoop;
+
+const best = localStorage.getItem("bestScore") || 0;
+document.getElementById("best").innerText = best;
 
 function startGame(){
-  score=0; time=30; combo=0;
+  score=0; time=30; combo=0; spawnRate=700;
   running=true;
-  document.getElementById("score").innerText=0;
-  document.getElementById("time").innerText=30;
+  updateHUD();
   document.getElementById("result").innerText="";
   document.getElementById("startBtn").style.display="none";
 
-  spawnLoop=setInterval(spawnHeart,450);
+  spawnLoop=setInterval(spawnHeart,spawnRate);
+
   timerLoop=setInterval(()=>{
     time--;
     document.getElementById("time").innerText=time;
+
+    // dificultad progresiva
+    if(time%5===0 && spawnRate>260){
+      spawnRate-=80;
+      clearInterval(spawnLoop);
+      spawnLoop=setInterval(spawnHeart,spawnRate);
+    }
+
     if(time<=0) endGame();
   },1000);
 }
 
 function spawnHeart(){
   if(!running) return;
+
   const h=document.createElement("div");
   h.className="heart";
-  h.innerHTML=["💖","💘","💝","❤️"][Math.floor(Math.random()*4)];
-  h.style.left=Math.random()*90+"vw";
-  h.style.top="-40px";
-  h.style.animationDuration=(Math.random()*2+2)+"s";
+
+  const rare = Math.random()<0.15;
+  h.innerText = rare ? "💛" : ["💖","💘","❤️","💝"][Math.random()*4|0];
+  if(rare) h.classList.add("gold");
+
+  const size = 56 + Math.random()*40;
+  h.style.fontSize=size+"px";
+
+  const margin=60;
+  h.style.left=Math.random()*(window.innerWidth-margin)+"px";
+  h.style.top="-60px";
+  h.style.animationDuration=(2+Math.random()*2)+"s";
+
+  const drift=(Math.random()*160-80);
+  h.animate([
+    {transform:"translateX(0)"},
+    {transform:`translateX(${drift}px)`}
+  ],{duration:3000});
 
   h.onclick=()=>{
-    score+=1+Math.floor(combo/3);
+    const pts = rare ? 5 : 1;
+    score += pts + Math.floor(combo/4);
     combo++;
-    updateHUD();
-    explode(h);
+    explode(h,pts);
     h.remove();
+    updateHUD();
   };
 
   document.body.appendChild(h);
-  setTimeout(()=>{ if(h.parentNode){combo=0; h.remove();}},4000);
+
+  setTimeout(()=>{
+    if(h.parentNode){
+      combo=0;
+      h.remove();
+      updateHUD();
+    }
+  },4200);
 }
 
-function explode(el){
+function explode(el,pts){
   document.body.classList.add("shake");
-  setTimeout(()=>document.body.classList.remove("shake"),200);
+  setTimeout(()=>document.body.classList.remove("shake"),180);
 
-  const p=document.createElement("div");
-  p.className="pop";
-  p.innerText="+"+(1+Math.floor(combo/3));
-  p.style.left=el.style.left;
-  p.style.top=el.getBoundingClientRect().top+"px";
-  document.body.appendChild(p);
-  setTimeout(()=>p.remove(),500);
+  const r=el.getBoundingClientRect();
+
+  const pop=document.createElement("div");
+  pop.className="pop";
+  pop.innerText="+"+pts;
+  pop.style.left=r.left+"px";
+  pop.style.top=r.top+"px";
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(),600);
+
+  // partículas
+  for(let i=0;i<8;i++){
+    const p=document.createElement("div");
+    p.className="particle";
+    p.innerText="✨";
+    p.style.left=r.left+"px";
+    p.style.top=r.top+"px";
+    p.style.setProperty("--dx",(Math.random()*120-60)+"px");
+    p.style.setProperty("--dy",(Math.random()*120-60)+"px");
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),700);
+  }
 }
 
 function updateHUD(){
   document.getElementById("score").innerText=score;
-  document.getElementById("combo").innerText=
-    combo>=3 ? "🔥 Combo x"+combo : "";
+  document.getElementById("time").innerText=time;
+  document.getElementById("combo").innerText =
+    combo>=4 ? "🔥 Combo x"+combo : "";
 }
 
 function endGame(){
@@ -199,14 +257,18 @@ function endGame(){
   document.querySelectorAll(".heart").forEach(e=>e.remove());
   document.getElementById("startBtn").style.display="inline-block";
 
-  let msg="😎 Sobreviviste.";
-  if(score>40) msg="🏆 Maestro del desamor";
-  else if(score>25) msg="💪 Fuerte emocionalmente";
-  else if(score>10) msg="🙂 Vas mejorando";
-  else msg="💔 Necesitas entrenamiento";
+  if(score > best){
+    localStorage.setItem("bestScore",score);
+    document.getElementById("best").innerText=score;
+  }
 
-  document.getElementById("result").innerText=
-    msg+" — Puntos: "+score;
+  let msg="🙂 Bien jugado";
+  if(score>60) msg="🏆 LEYENDA SOLTERA";
+  else if(score>35) msg="💪 Anti-Cupido";
+  else if(score>20) msg="😎 Resistente";
+
+  document.getElementById("result").innerText =
+    msg + " — Puntos: "+score;
 }
 </script>
 
