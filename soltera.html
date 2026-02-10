@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modo Soltero 😎</title>
+
+<style>
+body{
+  margin:0;
+  overflow:hidden;
+  font-family:Arial;
+  background:linear-gradient(135deg,#1f1f2e,#2b2b44);
+  color:white;
+  text-align:center;
+}
+
+h1{
+  margin:10px;
+  font-size:22px;
+}
+
+#player{
+  position:fixed;
+  font-size:40px;
+  left:50%;
+  top:70%;
+  transform:translate(-50%,-50%);
+}
+
+.arrow{
+  position:fixed;
+  font-size:34px;
+  top:-40px;
+  animation:fall linear forwards;
+}
+
+@keyframes fall{
+  to{ transform:translateY(110vh); }
+}
+
+#score{
+  position:fixed;
+  top:10px;
+  right:10px;
+  font-size:18px;
+}
+
+#end{
+  position:fixed;
+  inset:0;
+  background:#000c;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  padding:20px;
+}
+button{
+  padding:14px 20px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  margin-top:15px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>💔 Modo San Valentín Soltero</h1>
+<p>Esquiva las flechas de Cupido 😈🏹</p>
+
+<div id="player">💙</div>
+<div id="score">0</div>
+
+<div id="end">
+  <h2 id="msg"></h2>
+  <button onclick="location.reload()">Jugar otra vez</button>
+</div>
+
+<script>
+const player = document.getElementById("player");
+const scoreTxt = document.getElementById("score");
+const endBox = document.getElementById("end");
+const msg = document.getElementById("msg");
+
+let score = 0;
+let alive = true;
+
+// mover con dedo o mouse
+document.addEventListener("pointermove", e=>{
+  player.style.left = e.clientX + "px";
+  player.style.top  = e.clientY + "px";
+});
+
+// spawn flechas
+function spawnArrow(){
+  if(!alive) return;
+
+  const a = document.createElement("div");
+  a.className="arrow";
+  a.innerText="🏹";
+  a.style.left = Math.random()*100+"vw";
+  a.style.animationDuration = (2+Math.random()*2)+"s";
+
+  document.body.appendChild(a);
+
+  const fall = setInterval(()=>{
+    if(!alive){ clearInterval(fall); return; }
+
+    const ar = a.getBoundingClientRect();
+    const pr = player.getBoundingClientRect();
+
+    if(
+      ar.left < pr.right &&
+      ar.right > pr.left &&
+      ar.top < pr.bottom &&
+      ar.bottom > pr.top
+    ){
+      morir();
+    }
+  },30);
+
+  setTimeout(()=>{
+    a.remove();
+    clearInterval(fall);
+    if(alive){
+      score++;
+      scoreTxt.innerText = score;
+    }
+  },4000);
+}
+
+setInterval(spawnArrow,700);
+
+function morir(){
+  alive=false;
+  endBox.style.display="flex";
+
+  if(score < 5){
+    msg.innerText = "Cupido te encontró 😅";
+  } else if(score < 12){
+    msg.innerText = "Sobreviviste… pero por poco 😏";
+  } else {
+    msg.innerText = "Inalcanzable. Cupido se rindió 😎";
+  }
+
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+}
+</script>
+
+</body>
+</html>
