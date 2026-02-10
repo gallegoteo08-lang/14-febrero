@@ -2,152 +2,211 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Modo Soltero 😎</title>
+<title>Modo Soltero Extremo 🎮</title>
 
 <style>
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  overflow:hidden;
-  font-family:Arial;
-  background:linear-gradient(135deg,#1f1f2e,#2b2b44);
+  font-family:Arial, sans-serif;
   color:white;
   text-align:center;
+  overflow:hidden;
+  background:linear-gradient(270deg,#0f0c29,#302b63,#24243e);
+  background-size:600% 600%;
+  animation:bgMove 12s ease infinite;
+}
+
+@keyframes bgMove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
 }
 
 h1{
-  margin:10px;
+  margin-top:15px;
+  animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.05)}
+  100%{transform:scale(1)}
+}
+
+#hud{
+  font-size:20px;
+  margin:8px;
+}
+
+#combo{
   font-size:22px;
+  color:#ffd166;
+  height:28px;
+  transition:.2s;
 }
 
-#player{
-  position:fixed;
-  font-size:40px;
-  left:50%;
-  top:70%;
-  transform:translate(-50%,-50%);
+button{
+  padding:16px 28px;
+  font-size:20px;
+  border:none;
+  border-radius:14px;
+  background:#ff4d6d;
+  color:white;
+  cursor:pointer;
+  box-shadow:0 0 20px #ff4d6d;
+  animation:glow 1.5s infinite alternate;
 }
 
-.arrow{
-  position:fixed;
-  font-size:34px;
-  top:-40px;
-  animation:fall linear forwards;
+@keyframes glow{
+  from{box-shadow:0 0 10px #ff4d6d}
+  to{box-shadow:0 0 30px #ff4d6d}
+}
+
+.heart{
+  position:absolute;
+  font-size:36px;
+  cursor:pointer;
+  user-select:none;
+  animation:fall linear forwards, spin 2s linear infinite;
 }
 
 @keyframes fall{
-  to{ transform:translateY(110vh); }
+  to{transform:translateY(110vh)}
 }
 
-#score{
-  position:fixed;
-  top:10px;
-  right:10px;
-  font-size:18px;
+@keyframes spin{
+  from{rotate:0deg}
+  to{rotate:360deg}
 }
 
-#end{
-  position:fixed;
-  inset:0;
-  background:#000c;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  padding:20px;
+.pop{
+  position:absolute;
+  font-size:22px;
+  animation:pop .5s forwards;
+  pointer-events:none;
 }
-button{
-  padding:14px 20px;
-  font-size:18px;
-  border:none;
-  border-radius:12px;
+
+@keyframes pop{
+  to{
+    transform:translateY(-40px) scale(1.6);
+    opacity:0;
+  }
+}
+
+#result{
+  font-size:24px;
   margin-top:15px;
-  cursor:pointer;
+  animation:fadeIn .6s;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:scale(.8)}
+  to{opacity:1; transform:scale(1)}
+}
+
+.shake{
+  animation:shake .25s;
+}
+
+@keyframes shake{
+  0%{transform:translateX(-6px)}
+  50%{transform:translateX(6px)}
+  100%{transform:translateX(0)}
 }
 </style>
 </head>
 
 <body>
 
-<h1>💔 Modo San Valentín Soltero</h1>
-<p>Esquiva las flechas de Cupido 😈🏹</p>
+<h1>🎮 Modo Soltero Extremo</h1>
+<div id="hud">Puntos: <span id="score">0</span> | Tiempo: <span id="time">30</span></div>
+<div id="combo"></div>
 
-<div id="player">💙</div>
-<div id="score">0</div>
+<button onclick="startGame()" id="startBtn">Empezar batalla 💥</button>
 
-<div id="end">
-  <h2 id="msg"></h2>
-  <button onclick="location.reload()">Jugar otra vez</button>
-</div>
+<div id="result"></div>
 
 <script>
-const player = document.getElementById("player");
-const scoreTxt = document.getElementById("score");
-const endBox = document.getElementById("end");
-const msg = document.getElementById("msg");
+let score=0;
+let time=30;
+let running=false;
+let combo=0;
+let spawnLoop;
+let timerLoop;
 
-let score = 0;
-let alive = true;
+function startGame(){
+  score=0; time=30; combo=0;
+  running=true;
+  document.getElementById("score").innerText=0;
+  document.getElementById("time").innerText=30;
+  document.getElementById("result").innerText="";
+  document.getElementById("startBtn").style.display="none";
 
-// mover con dedo o mouse
-document.addEventListener("pointermove", e=>{
-  player.style.left = e.clientX + "px";
-  player.style.top  = e.clientY + "px";
-});
-
-// spawn flechas
-function spawnArrow(){
-  if(!alive) return;
-
-  const a = document.createElement("div");
-  a.className="arrow";
-  a.innerText="🏹";
-  a.style.left = Math.random()*100+"vw";
-  a.style.animationDuration = (2+Math.random()*2)+"s";
-
-  document.body.appendChild(a);
-
-  const fall = setInterval(()=>{
-    if(!alive){ clearInterval(fall); return; }
-
-    const ar = a.getBoundingClientRect();
-    const pr = player.getBoundingClientRect();
-
-    if(
-      ar.left < pr.right &&
-      ar.right > pr.left &&
-      ar.top < pr.bottom &&
-      ar.bottom > pr.top
-    ){
-      morir();
-    }
-  },30);
-
-  setTimeout(()=>{
-    a.remove();
-    clearInterval(fall);
-    if(alive){
-      score++;
-      scoreTxt.innerText = score;
-    }
-  },4000);
+  spawnLoop=setInterval(spawnHeart,450);
+  timerLoop=setInterval(()=>{
+    time--;
+    document.getElementById("time").innerText=time;
+    if(time<=0) endGame();
+  },1000);
 }
 
-setInterval(spawnArrow,700);
+function spawnHeart(){
+  if(!running) return;
+  const h=document.createElement("div");
+  h.className="heart";
+  h.innerHTML=["💖","💘","💝","❤️"][Math.floor(Math.random()*4)];
+  h.style.left=Math.random()*90+"vw";
+  h.style.top="-40px";
+  h.style.animationDuration=(Math.random()*2+2)+"s";
 
-function morir(){
-  alive=false;
-  endBox.style.display="flex";
+  h.onclick=()=>{
+    score+=1+Math.floor(combo/3);
+    combo++;
+    updateHUD();
+    explode(h);
+    h.remove();
+  };
 
-  if(score < 5){
-    msg.innerText = "Cupido te encontró 😅";
-  } else if(score < 12){
-    msg.innerText = "Sobreviviste… pero por poco 😏";
-  } else {
-    msg.innerText = "Inalcanzable. Cupido se rindió 😎";
-  }
+  document.body.appendChild(h);
+  setTimeout(()=>{ if(h.parentNode){combo=0; h.remove();}},4000);
+}
 
-  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+function explode(el){
+  document.body.classList.add("shake");
+  setTimeout(()=>document.body.classList.remove("shake"),200);
+
+  const p=document.createElement("div");
+  p.className="pop";
+  p.innerText="+"+(1+Math.floor(combo/3));
+  p.style.left=el.style.left;
+  p.style.top=el.getBoundingClientRect().top+"px";
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),500);
+}
+
+function updateHUD(){
+  document.getElementById("score").innerText=score;
+  document.getElementById("combo").innerText=
+    combo>=3 ? "🔥 Combo x"+combo : "";
+}
+
+function endGame(){
+  running=false;
+  clearInterval(spawnLoop);
+  clearInterval(timerLoop);
+  document.querySelectorAll(".heart").forEach(e=>e.remove());
+  document.getElementById("startBtn").style.display="inline-block";
+
+  let msg="😎 Sobreviviste.";
+  if(score>40) msg="🏆 Maestro del desamor";
+  else if(score>25) msg="💪 Fuerte emocionalmente";
+  else if(score>10) msg="🙂 Vas mejorando";
+  else msg="💔 Necesitas entrenamiento";
+
+  document.getElementById("result").innerText=
+    msg+" — Puntos: "+score;
 }
 </script>
 
