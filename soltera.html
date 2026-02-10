@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Modo Soltero PRO 🎮</title>
+<title>Modo Soltero PRO MAX 🎮</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -26,12 +26,12 @@ body{
 }
 
 h1{
-  margin:12px 0 4px;
+  margin:10px 0 4px;
   animation:pulse 2s infinite;
 }
 
 @keyframes pulse{
-  50%{transform:scale(1.05)}
+  50%{transform:scale(1.06)}
 }
 
 #hud{
@@ -58,18 +58,14 @@ button{
 
 @keyframes glow{
   from{box-shadow:0 0 8px #ff4d6d}
-  to{box-shadow:0 0 26px #ff4d6d}
+  to{box-shadow:0 0 28px #ff4d6d}
 }
 
 .heart{
   position:absolute;
   cursor:pointer;
   user-select:none;
-  animation:fall linear forwards, spin 3s linear infinite;
-}
-
-@keyframes fall{
-  to{transform:translateY(110vh)}
+  animation:spin 5s linear infinite;
 }
 
 @keyframes spin{
@@ -77,7 +73,7 @@ button{
 }
 
 .gold{
-  filter:drop-shadow(0 0 10px gold);
+  filter:drop-shadow(0 0 12px gold);
 }
 
 .pop{
@@ -115,19 +111,14 @@ button{
 #result{
   font-size:22px;
   margin-top:8px;
-  animation:fade .5s;
-}
-
-@keyframes fade{
-  from{opacity:0; transform:scale(.8)}
-  to{opacity:1; transform:scale(1)}
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎮 Modo Soltero PRO</h1>
+<h1>🎮 Modo Soltero PRO MAX</h1>
+
 <div id="hud">
 Puntos: <span id="score">0</span> |
 Tiempo: <span id="time">30</span> |
@@ -141,14 +132,14 @@ Récord: <span id="best">0</span>
 
 <script>
 let score=0,time=30,running=false,combo=0;
-let spawnRate=700;
+let spawnRate=900;
 let spawnLoop,timerLoop;
 
 const best = localStorage.getItem("bestScore") || 0;
 document.getElementById("best").innerText = best;
 
 function startGame(){
-  score=0; time=30; combo=0; spawnRate=700;
+  score=0; time=30; combo=0; spawnRate=900;
   running=true;
   updateHUD();
   document.getElementById("result").innerText="";
@@ -161,8 +152,8 @@ function startGame(){
     document.getElementById("time").innerText=time;
 
     // dificultad progresiva
-    if(time%5===0 && spawnRate>260){
-      spawnRate-=80;
+    if(time%6===0 && spawnRate>300){
+      spawnRate-=100;
       clearInterval(spawnLoop);
       spawnLoop=setInterval(spawnHeart,spawnRate);
     }
@@ -181,19 +172,27 @@ function spawnHeart(){
   h.innerText = rare ? "💛" : ["💖","💘","❤️","💝"][Math.random()*4|0];
   if(rare) h.classList.add("gold");
 
-  const size = 56 + Math.random()*40;
+  // tamaño grande variable
+  const size = 60 + Math.random()*44;
   h.style.fontSize=size+"px";
 
-  const margin=60;
+  // posición en toda pantalla
+  const margin=80;
   h.style.left=Math.random()*(window.innerWidth-margin)+"px";
-  h.style.top="-60px";
-  h.style.animationDuration=(2+Math.random()*2)+"s";
+  h.style.top=Math.random()*(window.innerHeight-margin)+"px";
 
-  const drift=(Math.random()*160-80);
+  // movimiento flotante animado
+  const dx = Math.random()*300-150;
+  const dy = Math.random()*300-150;
+
   h.animate([
-    {transform:"translateX(0)"},
-    {transform:`translateX(${drift}px)`}
-  ],{duration:3000});
+    { transform:"translate(0,0)" },
+    { transform:`translate(${dx}px, ${dy}px)` }
+  ],{
+    duration: 3500 + Math.random()*2000,
+    direction:"alternate",
+    iterations:Infinity
+  });
 
   h.onclick=()=>{
     const pts = rare ? 5 : 1;
@@ -202,6 +201,7 @@ function spawnHeart(){
     explode(h,pts);
     h.remove();
     updateHUD();
+    if(navigator.vibrate) navigator.vibrate(25);
   };
 
   document.body.appendChild(h);
@@ -212,7 +212,7 @@ function spawnHeart(){
       h.remove();
       updateHUD();
     }
-  },4200);
+  },6500);
 }
 
 function explode(el,pts){
@@ -229,15 +229,14 @@ function explode(el,pts){
   document.body.appendChild(pop);
   setTimeout(()=>pop.remove(),600);
 
-  // partículas
-  for(let i=0;i<8;i++){
+  for(let i=0;i<10;i++){
     const p=document.createElement("div");
     p.className="particle";
     p.innerText="✨";
     p.style.left=r.left+"px";
     p.style.top=r.top+"px";
-    p.style.setProperty("--dx",(Math.random()*120-60)+"px");
-    p.style.setProperty("--dy",(Math.random()*120-60)+"px");
+    p.style.setProperty("--dx",(Math.random()*140-70)+"px");
+    p.style.setProperty("--dy",(Math.random()*140-70)+"px");
     document.body.appendChild(p);
     setTimeout(()=>p.remove(),700);
   }
